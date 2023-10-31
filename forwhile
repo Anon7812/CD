@@ -1,0 +1,45 @@
+%option noyywrap                                                            
+
+%{                                                                          
+
+#include<string.h>                                                          
+
+#include<stdio.h>                                                           
+
+char *incr;                                                                 
+
+%}                                                                          
+
+                                                                            
+
+%x loopCond                                                                 
+
+%x stmt
+
+
+
+
+
+%%
+"for" {BEGIN loopCond;}
+<loopCond>"("[^;)]*";" {printf("%s\n",(yytext+1)); unput(';');}
+<loopCond>";"[^;)]*";" {yytext[yyleng-1]='\0'; printf("while(%s)",(yytext+1)); unput(';');}
+<loopCond>";"[^;)]*")" {yytext[yyleng-1]='\0'; incr=strdup(yytext+1); BEGIN stmt;}
+<stmt>"{"[^}]* {printf("%s",yytext);}
+<stmt>"}" {printf("%s;\n}",incr);BEGIN INITIAL;}
+.
+%%
+
+        int main(){
+
+
+        yyin = fopen("for.txt","r");
+
+
+        yylex();
+
+
+        return 0;
+
+
+}
