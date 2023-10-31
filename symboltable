@@ -1,0 +1,116 @@
+%option noyywrap
+%{
+#include <stdio.h>
+#include<string.h>
+struct SymbolEntry {
+    char name[64];
+    char type[16];
+    int line;
+};                                                                          
+
+struct SymbolEntry table[100]={"" ,"",0};
+int count =0,lineno=1;
+void addSymbol(char* name, char* type,int line) {
+        strcpy(table[count].name,name);
+
+
+        strcpy(table[count].type,type);
+
+
+        table[count].line = line;
+
+
+        count++;
+
+
+}
+
+
+char str[16];
+void display(){
+        printf("\nSymbol table\n");
+        printf("----------------------------------------\n");
+        printf("Name\t|Type\t\t|lineno\t\n");
+        printf("----------------------------------------\n");
+        for(int i=0;i<count;i++){
+                printf("%s\t|%s\t\t|%d\n",table[i].name,table[i].type,table[i].line);
+        }
+        printf("----------------------------------------\n");
+}
+%}
+KEYWORD    int|void|char|float|double|long
+STRUCT     struct
+WORDS      int|void|char|float|class|double|long|struct|printf|scanf
+%x charactor
+%x con
+%x integer
+%x floati
+%x parameter
+%x header
+%x array
+%x function
+%x returnval
+%x ints
+%x floats
+%x chars
+%x arrays
+%x struct2
+%x struct1
+%%
+#include { BEGIN header;}
+<header>[a-zA-Z]+".h" { addSymbol(yytext,"header",lineno);BEGIN INITIAL;}
+int[ ]+ { BEGIN integer; }
+{KEYWORD}[ ]+[a-zA-Z]+"("")" { addSymbol(yytext,"function",lineno);}
+<integer>[a-zA-Z]+[ ]* { addSymbol(yytext,"int",lineno);BEGIN INITIAL;}
+float[ ]+ { BEGIN floati; }
+<floati>[a-zA-Z]+[ ]* { addSymbol(yytext,"float",lineno); BEGIN INITIAL;}
+char[ ]+ { BEGIN charactor; }
+<charactor>[a-zA-Z][ ]* { addSymbol(yytext,"char",lineno);BEGIN INITIAL;}
+{KEYWORD}[ ]+ { strcpy(str,yytext);BEGIN function;}
+<function>[a-zA-Z]+"("")" { addSymbol(yytext,str,lineno);BEGIN INITIAL;}
+{KEYWORD}[ ]*[a-zA-Z]+"("[a-zA-Z]+")" { addSymbol(yytext,"parameter",lineno);}
+printf|scanf { addSymbol(yytext,"input/output",lineno); BEGIN con;}
+<con>[ ][a-zA-Z\""%.,!][ ][a-zA-Z\"".,%!\n] { addSymbol(yytext,"I/O content",lineno);BEGIN INITIAL;}
+int|float|char[ ]+[a-zA-Z]+"[]" { addSymbol(yytext,"array",lineno);BEGIN INITIAL;}
+return { addSymbol(yytext,"complete",lineno);BEGIN returnval;}
+'[a-zA-Z]' { addSymbol(yytext,"charactor",lineno);}
+{STRUCT}[ ]+ { BEGIN struct2;}
+<struct2>[a-zA-Z][a-zA-Z0-9]* { addSymbol(yytext,"struct",lineno);BEGIN struct1;}
+<struct1>int[ ]+ { BEGIN ints; }
+<ints>[a-zA-Z]+[ ]* { addSymbol(yytext,"int struct",lineno);BEGIN struct1;}
+<struct1>float[ ]+ { BEGIN floats;}
+<floats>[a-zA-Z]+[ ]* {  addSymbol(yytext,"float struct",lineno);BEGIN struct1; }
+<struct1>char[ ]+ { BEGIN chars; }
+<chars>[a-zA-Z][ ]* { addSymbol(yytext,"char struct",lineno);BEGIN struct1;}
+<struct1>int|float|char[ ]+[a-zA-Z]+"[]" { addSymbol(yytext,"array struct",lineno);BEGIN struct1;}
+<struct1>"}" { BEGIN INITIAL;}
+<returnval>[ ]+[a-zA-Z0-9] { addSymbol(yytext,"returnval",lineno); BEGIN INITIAL;}
+[a-zA-Z][a-zA-Z0-9]* { addSymbol(yytext, "identifier",lineno); }
+[0-9]+ { addSymbol(yytext, "integerval",lineno); }
+[0-9]+\.[0-9]+ { addSymbol(yytext, "floatval",lineno); }
+[ \t]
+\n { lineno++;}
+
+
+
+.
+
+
+
+%%
+
+
+
+int main() {
+    yyin = fopen("q2.c","r");
+    yylex();
+
+
+    display();
+
+
+    fclose(yyin);
+
+
+    return 0;
+}
