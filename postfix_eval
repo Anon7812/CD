@@ -1,0 +1,170 @@
+%option noyywrap
+%{
+    char stack[100];
+    int tos=0;
+    void push(char);
+    void pop();
+    char top();
+    int priority(char c);
+%}
+%%
+[a-zA-Z]? {printf("%c",yytext[0]);}
+[+\-\*\/\(\)] { char op=yytext[0];
+                 if(tos==0||op=='(')
+                   push(op);
+                 else if(op==')'){
+                   while(top()!='('){
+                    printf("%c",top());
+                    pop();
+                    }
+                    pop();
+                 }
+
+                 else if(priority(op)>priority(top())){
+                  push(op);
+                  }
+                  else if(priority(op)<=priority(top())){
+                    while(priority(op)<=priority(top())){
+                       printf("%c",top());
+                       pop();
+                       }
+                       push(op);
+                  }
+              }
+ [\n]  {
+          int i;
+             for(i=tos-1;i>=0;i--)
+                 if(stack[i]!='('&&stack[i]!=')'){
+                    printf("%c",stack[i]);
+
+                    }
+          tos=0;
+
+
+       }
+%%
+int main(){
+   yylex();
+        return 0;
+}
+
+void pop(){
+ tos--;
+}
+ char top(){
+   return stack[tos-1];
+}
+
+void push(char c){
+   stack[tos]=c;
+   tos++;
+}
+int priority(char c){
+switch(c){
+case '(':return 0;
+case ')':return 0;
+case '+':return 1;
+case '-':return 1;
+case '*':return 2;
+case '/':return 2;
+}
+}
+[s2021103026@centos8-linux Tue Oct 31 08:45 PM week04]$ cat evaluate.l
+%option noyywrap
+%{
+    char stack[100];
+    int tos=0;
+    void push(char);
+    void pop();
+    char top();
+    int priority(char c);
+    char postfix[100];
+    int st[100];
+        int j=0;
+int toss=0;
+void pushs(int);
+int pops();
+
+%}
+%%
+[0-9] {postfix[j++]=yytext[0];}
+[+\-\*\/\(\)] { char op=yytext[0];
+                 if(tos==0||op=='(')
+                   push(op);
+                 else if(op==')'){
+                   while(top()!='('){
+                    postfix[j++]=top();
+                    pop();
+                    }
+                    pop();
+                 }
+
+                 else if(priority(op)>priority(top())){
+                  push(op);
+                  }
+                  else if(priority(op)<=priority(top())){
+                    while(priority(op)<=priority(top())){
+                       postfix[j++]=top();
+                       pop();
+                       }
+                       push(op);
+                  }
+              }
+ [\n]  {
+          int i;
+             for(i=tos-1;i>=0;i--)
+                 if(stack[i]!='('&&stack[i]!=')'){
+                    postfix[j++]=stack[i];
+        }
+          tos=0;
+        for(int k=0;k<j;k++){
+                if(postfix[k]>='0' && postfix[k]<='9'){
+                        pushs(postfix[k]-'0');
+                }else{
+                        int a = pops();
+                        int b = pops();
+                        char op = postfix[k];
+                        switch(op){
+                                case '+': pushs(a+b);break;
+                                case '-': pushs(b-a);break;
+                                case '*': pushs(b*a);break;
+                                case '/': pushs(b/a);break;
+                        }
+                }
+        }
+        printf("%d",pops());
+
+       }
+%%
+int main(){
+   yylex();
+}
+
+void pop(){
+ tos--;
+}
+ char top(){
+   return stack[tos-1];
+}
+
+void push(char c){
+   stack[tos]=c;
+   tos++;
+}
+void pushs(int val){
+        st[toss]=val;
+        toss++;
+}
+int pops(){
+        return st[--toss];
+}
+int priority(char c){
+switch(c){
+case '(':return 0;
+case ')':return 0;
+case '+':return 1;
+case '-':return 1;
+case '*':return 2;
+case '/':return 2;
+}
+}
