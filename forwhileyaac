@@ -1,0 +1,95 @@
+%option noyywrap
+%{
+#include<stdio.h>
+#include<stdlib.h>
+#include "y.tab.h"
+%}
+alpha [A-Za-z]
+digit [0-9]
+%%
+[ \t\n]
+while   return WHILE;
+for     return FOR;
+{digit}+    return NUM;
+{alpha}({alpha}|{digit})*    return ID;
+"<="    return LE;
+">="    return GE;
+"=="    return EQ;
+"!="    return NE;
+"||"    return OR;
+"&&"    return AND;
+"printf("[^)]*")"       return PRINT;
+"scanf("[^)]*")"        return SCAN;
+.    return yytext[0];
+%%
+
+
+
+
+[s2021103585@centos8-linux Tue Oct 31 08:38 PM week10]$ cat loop.y
+%{
+#include <stdio.h>
+#include <stdlib.h>
+extern FILE *yyin;
+extern int yylex();
+%}
+%token ID NUM WHILE LE GE EQ NE OR AND FOR PRINT SCAN
+%right '='
+%left AND OR
+%left '<' '>' LE GE EQ NE
+%left '+''-'
+%left '*''/'
+%right UMINUS
+%left '!'
+%%
+prog  : s prog
+      |
+      ;
+s     : st1 {printf("Input accepted.\n");};
+st1   : WHILE'(' e2 ')' '{' st '}'
+      | FOR '(' e ';' e2 ';' e ')' '{' st '}'
+st    : st st
+      | e';'
+      ;
+e     : ID'='e
+      | e'+'e
+      | e'-'e
+      | e'*'e
+      | e'/'e
+      | e'<'e
+      | e'>'e
+      | e '+' '+'
+      | e '-' '-'
+      | e LE e
+      | e GE e
+      | e EQ e
+      | e NE e
+      | e OR e
+      | e AND e
+      | PRINT
+      | SCAN
+      | ID
+      | NUM
+      ;
+e2    : e'<'e
+      | e'>'e
+      | e LE e
+      | e GE e
+      | e EQ e
+      | e NE e
+      | e OR e
+      | e AND e
+      | ID
+      | NUM
+      ;
+
+%%
+
+void yyerror(char *s){
+        printf("%s\n",s);
+}
+
+int main(){
+   yyin = fopen("sample.c","r");
+   yyparse();
+}
